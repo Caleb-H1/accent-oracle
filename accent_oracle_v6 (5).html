@@ -1,0 +1,1269 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accent Oracle Beta</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f7f7f5;min-height:100vh;padding:2rem 1rem 4rem}
+.app{max-width:620px;margin:0 auto}
+.logo{font-size:26px;font-weight:700;color:#111;letter-spacing:-0.5px;margin-bottom:2px}
+.logo span{color:#1D9E75}
+.sub{font-size:12px;color:#999;margin-bottom:1.75rem;font-family:monospace}
+
+.progress-wrap{margin-bottom:1.25rem}
+.progress-top{display:flex;justify-content:space-between;margin-bottom:6px}
+.progress-top span{font-size:12px;font-family:monospace;color:#aaa}
+.progress-top strong{font-size:12px;font-family:monospace;color:#111}
+.progress-track{height:6px;background:#eee;border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:#1D9E75;border-radius:3px;transition:width 0.5s ease}
+.round-dots{display:flex;gap:6px;margin-top:8px}
+.rdot{width:30px;height:30px;border-radius:50%;border:2px solid #ddd;display:flex;align-items:center;justify-content:center;font-size:11px;font-family:monospace;color:#bbb;transition:all 0.3s;flex-shrink:0}
+.rdot.done{background:#1D9E75;border-color:#1D9E75;color:white}
+.rdot.cur{border-color:#1D9E75;color:#1D9E75;font-weight:700}
+.rdot.fail{background:#FCEBEB;border-color:#E24B4A;color:#A32D2D}
+
+.card{background:white;border:1px solid #eaeae8;border-radius:14px;padding:1.25rem;margin-bottom:10px}
+.card-label{font-size:11px;font-family:monospace;letter-spacing:1px;color:#aaa;text-transform:uppercase;margin-bottom:10px}
+
+.diff-badge{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:20px;font-family:monospace;font-weight:600;margin-bottom:8px}
+.ar-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 10px;border-radius:20px;font-family:monospace;background:#f0f0ee;color:#888;margin-left:6px}
+
+.sentence-box{font-size:20px;font-weight:500;line-height:1.8;color:#111;min-height:64px;padding:1rem 1.25rem;background:#f9f9f7;border-radius:10px;border:1px solid #eee}
+
+.btn-row{display:flex;gap:8px;margin:1rem 0}
+.btn{display:flex;align-items:center;justify-content:center;gap:7px;padding:12px 18px;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer;border:1px solid #ddd;background:white;color:#111;font-family:inherit;transition:all 0.15s;flex:1}
+.btn:hover{background:#f5f5f3}
+.btn:active{transform:scale(0.98)}
+.btn-green{background:#1D9E75;color:white;border-color:#1D9E75}
+.btn-green:hover{background:#0F6E56}
+.btn-red{background:#fff0f0;border-color:#E24B4A;color:#A32D2D;animation:rpulse 1.1s ease-in-out infinite}
+@keyframes rpulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.btn-rec{font-size:16px;padding:16px}
+
+.wave{display:none;align-items:center;justify-content:center;gap:4px;height:40px;margin:0 0 1rem}
+.wave.on{display:flex}
+.wb{width:4px;background:#1D9E75;border-radius:2px;animation:wv 0.75s ease-in-out infinite}
+@keyframes wv{0%,100%{height:6px}50%{height:30px}}
+
+.status-box{padding:12px 14px;border-radius:10px;font-size:14px;font-family:monospace;line-height:1.6;margin-bottom:10px;display:none;border:1px solid}
+.status-box.listening{display:block;background:#f0faf5;border-color:#b8e8d4;color:#0F6E56}
+.status-box.analyzing{display:block;background:#EEF2FF;border-color:#c7d2fe;color:#4338CA}
+.loading-bar{height:3px;background:#eee;border-radius:2px;margin-bottom:1rem;overflow:hidden;display:none}
+.loading-bar.on{display:block}
+.loading-fill{height:100%;background:linear-gradient(90deg,#1D9E75,#534AB7);animation:lbar 1.8s ease-in-out infinite}
+@keyframes lbar{0%{width:0;margin-left:0}50%{width:70%;margin-left:10%}100%{width:0;margin-left:100%}}
+
+.round-mini{border-radius:10px;padding:11px 14px;margin-bottom:8px;display:flex;align-items:center;gap:12px;border:1px solid}
+.round-mini-left{flex:1;min-width:0}
+.round-mini-meta{font-size:11px;font-family:monospace;margin-bottom:3px}
+.round-mini-text{font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.round-mini-right{text-align:right;flex-shrink:0}
+.round-mini-score{font-size:20px;font-weight:700;font-family:monospace}
+.round-mini-ar{font-size:11px;font-family:monospace;color:#aaa;margin-top:2px}
+
+/* 최종 결과 */
+.final-top{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.final-hero{border-radius:14px;padding:24px 16px;text-align:center}
+.final-hero-label{font-size:10px;font-family:monospace;letter-spacing:1.5px;text-transform:uppercase;opacity:0.6;margin-bottom:8px}
+.final-hero-val{font-size:46px;font-weight:800;font-family:monospace;letter-spacing:-2px;line-height:1;margin-bottom:4px}
+.final-hero-sub{font-size:12px;opacity:0.65;line-height:1.4}
+
+.level-steps{display:flex;gap:5px;margin-bottom:6px}
+.lstep{flex:1;height:8px;border-radius:4px;background:#eee;transition:background 0.5s}
+.lstep.on{background:var(--lc)}
+.lstep.cur{background:var(--lc);box-shadow:0 0 0 2px white,0 0 0 4px var(--lc)}
+.lnames{display:flex}
+.lname{flex:1;font-size:9px;font-family:monospace;color:#bbb;text-align:center}
+.lname:first-child{text-align:left}
+.lname:last-child{text-align:right}
+.lname.cur{font-weight:700;font-size:10px}
+
+.detail-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+.dsc{background:#f8f8f6;border-radius:10px;padding:13px}
+.dsc-label{font-size:11px;color:#aaa;font-family:monospace;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px}
+.dsc-val{font-size:26px;font-weight:700;font-family:monospace}
+.dsc-unit{font-size:11px;color:#bbb;font-family:monospace}
+.dsc-bar{height:4px;border-radius:2px;background:#eee;margin-top:7px;overflow:hidden}
+.dsc-bar-fill{height:100%;border-radius:2px;transition:width 1s ease;width:0}
+
+.rec-item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f0f0ee}
+.rec-item:last-child{border-bottom:none;padding-bottom:0}
+.rec-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.rec-body{flex:1}
+.rec-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.rec-tip{font-size:12px;color:#999}
+.rec-hrs{font-family:monospace;font-size:14px;font-weight:700}
+
+.feedback-text{font-size:14px;color:#444;line-height:1.75}
+.err{background:#fff0f0;color:#791F1F;border-radius:10px;padding:12px 14px;font-size:13px;margin-bottom:10px;display:none;line-height:1.6}
+.hidden{display:none}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2px">
+  <div class="logo">Accent <span>Oracle</span> <span style="font-size:12px;font-weight:400;color:#bbb;font-family:monospace">beta</span></div>
+  <button onclick="changeKey()" id="changeKeyBtn" style="display:none;font-size:11px;font-family:monospace;color:#aaa;background:none;border:1px solid #eee;border-radius:20px;padding:4px 10px;cursor:pointer">🔑 키 변경</button>
+</div>
+<div class="sub">적응형 5문장 · Azure AI · AR 지수 + CEFR 측정</div>
+
+<!-- Azure 키 입력 화면 -->
+<div id="keyView">
+  <div class="card" style="margin-top:0.5rem">
+    <div class="card-label">시작하기 전에</div>
+    <div style="font-size:14px;color:#555;line-height:1.7;margin-bottom:16px">
+      이 앱은 <strong>Azure Speech Services</strong>를 사용해요.<br>
+      Azure 포털에서 발급받은 키를 입력하면 바로 시작할 수 있어요.
+    </div>
+    <div style="margin-bottom:10px">
+      <div style="font-size:12px;font-family:monospace;color:#aaa;margin-bottom:6px">AZURE SPEECH KEY</div>
+      <input id="keyInput" type="password"
+        placeholder="Azure Speech Services 키를 입력하세요"
+        style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:monospace;outline:none;background:#f9f9f7"
+        onkeydown="if(event.key==='Enter')startWithKey()">
+    </div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;font-family:monospace;color:#aaa;margin-bottom:6px">REGION</div>
+      <select id="regionInput"
+        style="width:100%;padding:12px 14px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;font-family:inherit;outline:none;background:#f9f9f7;color:#111">
+        <option value="koreacentral">Korea Central (한국)</option>
+        <option value="eastus">East US (미국 동부)</option>
+        <option value="westus">West US (미국 서부)</option>
+        <option value="eastasia">East Asia (동아시아)</option>
+        <option value="japaneast">Japan East (일본)</option>
+      </select>
+    </div>
+    <div id="keyErr" style="display:none;color:#A32D2D;font-size:13px;margin-bottom:10px;padding:8px 12px;background:#FCEBEB;border-radius:8px"></div>
+    <button onclick="startWithKey()" class="btn btn-green" style="width:100%;padding:14px;font-size:15px">
+      <i class="ti ti-player-play"></i> 테스트 시작
+    </button>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid #f0f0ee">
+      <div style="font-size:12px;color:#aaa;line-height:1.7">
+        🔑 키는 이 기기 브라우저에만 임시 저장되며 외부로 전송되지 않아요.<br>
+        📌 Azure 포털 → Speech Services → 키 및 엔드포인트에서 확인할 수 있어요.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="err" id="errBox"></div>
+
+<!-- 테스트 뷰 -->
+<div id="testView" class="hidden">
+  <div class="progress-wrap">
+    <div class="progress-top">
+      <span>테스트 진행</span>
+      <strong id="progLabel">1 / 5</strong>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill" id="progFill" style="width:0%"></div>
+    </div>
+    <div class="round-dots" id="roundDots">
+      <div class="rdot cur" id="dot0">1</div>
+      <div class="rdot" id="dot1">2</div>
+      <div class="rdot" id="dot2">3</div>
+      <div class="rdot" id="dot3">4</div>
+      <div class="rdot" id="dot4">5</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:8px">
+      <div class="diff-badge" id="diffBadge"></div>
+      <div class="ar-tag" id="arTag"></div>
+    </div>
+    <div class="card-label">문장을 크게 읽어주세요</div>
+    <div class="sentence-box" id="sentBox">로딩 중...</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-green btn-rec" id="recBtn" onclick="toggleRec()">
+      <i class="ti ti-microphone" id="recIcon"></i>
+      <span id="recLabel">녹음 시작</span>
+    </button>
+  </div>
+
+  <div class="wave" id="wave">
+    <div class="wb" style="animation-delay:0.00s"></div>
+    <div class="wb" style="animation-delay:0.08s"></div>
+    <div class="wb" style="animation-delay:0.16s"></div>
+    <div class="wb" style="animation-delay:0.04s"></div>
+    <div class="wb" style="animation-delay:0.12s"></div>
+    <div class="wb" style="animation-delay:0.20s"></div>
+    <div class="wb" style="animation-delay:0.06s"></div>
+    <div class="wb" style="animation-delay:0.14s"></div>
+  </div>
+
+  <div class="loading-bar" id="loadingBar"><div class="loading-fill"></div></div>
+  <div class="status-box" id="statusBox"></div>
+  <div id="roundMinis"></div>
+</div>
+
+<!-- 최종 결과 뷰 -->
+<div id="finalView" class="hidden">
+
+  <!-- AR + CEFR 나란히 -->
+  <div class="final-top">
+    <div class="final-hero" id="arHero">
+      <div class="final-hero-label">AR 지수</div>
+      <div class="final-hero-val" id="finalAR">—</div>
+      <div class="final-hero-sub">Atos Reading Level<br>측정 가능한 읽기 수준</div>
+    </div>
+    <div class="final-hero" id="cefrHero">
+      <div class="final-hero-label">CEFR 레벨</div>
+      <div class="final-hero-val" id="finalCEFR">—</div>
+      <div class="final-hero-sub" id="cefrDesc">—</div>
+    </div>
+  </div>
+
+  <!-- CEFR 단계 바 -->
+  <div class="card" style="padding:1rem 1.25rem">
+    <div class="level-steps" id="lsteps">
+      <div class="lstep" id="ls0"></div>
+      <div class="lstep" id="ls1"></div>
+      <div class="lstep" id="ls2"></div>
+      <div class="lstep" id="ls3"></div>
+      <div class="lstep" id="ls4"></div>
+      <div class="lstep" id="ls5"></div>
+    </div>
+    <div class="lnames">
+      <div class="lname" id="ln0">A1</div>
+      <div class="lname" id="ln1">A2</div>
+      <div class="lname" id="ln2">B1</div>
+      <div class="lname" id="ln3">B2</div>
+      <div class="lname" id="ln4">C1</div>
+      <div class="lname" id="ln5">C2</div>
+    </div>
+  </div>
+
+  <!-- 문장별 요약 -->
+  <div class="card">
+    <div class="card-label">문장별 결과 (적응형 테스트)</div>
+    <div id="finalRounds"></div>
+  </div>
+
+  <!-- 세부 점수 평균 -->
+  <div class="detail-grid">
+    <div class="dsc">
+      <div class="dsc-label">발음 정확도</div>
+      <div><span class="dsc-val" id="dP">—</span><span class="dsc-unit">/100</span></div>
+      <div class="dsc-bar"><div class="dsc-bar-fill" id="dbP" style="background:#1D9E75"></div></div>
+    </div>
+    <div class="dsc">
+      <div class="dsc-label">유창성</div>
+      <div><span class="dsc-val" id="dF">—</span><span class="dsc-unit">/100</span></div>
+      <div class="dsc-bar"><div class="dsc-bar-fill" id="dbF" style="background:#534AB7"></div></div>
+    </div>
+    <div class="dsc">
+      <div class="dsc-label">완성도</div>
+      <div><span class="dsc-val" id="dC">—</span><span class="dsc-unit">/100</span></div>
+      <div class="dsc-bar"><div class="dsc-bar-fill" id="dbC" style="background:#185FA5"></div></div>
+    </div>
+    <div class="dsc">
+      <div class="dsc-label">운율 / 억양</div>
+      <div><span class="dsc-val" id="dPr">—</span><span class="dsc-unit">/100</span></div>
+      <div class="dsc-bar"><div class="dsc-bar-fill" id="dbPr" style="background:#BA7517"></div></div>
+    </div>
+  </div>
+
+  <!-- 피드백 -->
+  <div class="card">
+    <div class="card-label">AI 피드백</div>
+    <div class="feedback-text" id="feedbackText"></div>
+  </div>
+
+  <!-- Cambridge 기반 학습 시간 -->
+  <div class="card">
+    <div class="card-label">레벨업까지 필요한 학습 시간</div>
+    <div id="cambridgeHours"></div>
+    <div style="font-size:10px;color:#bbb;margin-top:10px;font-family:monospace;line-height:1.5">
+      📎 출처: Cambridge English Guided Learning Hours Research (Cambridge University Press, 2018)<br>
+      ※ 개인 학습 환경에 따라 차이가 있을 수 있습니다
+    </div>
+  </div>
+
+  <!-- 매일 학습 가이드 -->
+  <div class="card">
+    <div class="card-label">매일 학습 가이드</div>
+    <div style="font-size:11px;color:#aaa;font-family:monospace;margin-bottom:12px">💡 일반적인 영어 교육 권장 가이드입니다</div>
+    <div id="dailyGuide"></div>
+  </div>
+
+  <div style="text-align:center;margin-top:1.5rem">
+    <button class="btn btn-green" style="display:inline-flex;width:auto;flex:none;padding:13px 30px;font-size:15px" onclick="restartTest()">
+      <i class="ti ti-refresh"></i> 다시 테스트
+    </button>
+  </div>
+</div>
+
+<!-- 리딩 테스트 뷰 -->
+<div id="readingView" class="hidden">
+  <div style="margin-bottom:1.25rem">
+    <div style="font-size:11px;font-family:monospace;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">2단계 · 독해 / 어휘 / 문법 테스트</div>
+    <div class="progress-track"><div class="progress-fill" id="rProgFill" style="width:0%"></div></div>
+    <div style="display:flex;justify-content:space-between;margin-top:5px">
+      <span style="font-size:12px;font-family:monospace;color:#aaa" id="rProgLabel">1 / 6</span>
+      <span style="font-size:12px;font-family:monospace;color:#aaa" id="rTypeBadge"></span>
+    </div>
+  </div>
+  <div class="card">
+    <div style="font-size:11px;font-family:monospace;color:#aaa;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px" id="rTypeLabel"></div>
+    <div id="rPassage" style="display:none;background:#f9f9f7;border-radius:8px;padding:12px 14px;font-size:14px;line-height:1.75;color:#444;margin-bottom:14px;border:1px solid #eee"></div>
+    <div style="font-size:16px;font-weight:500;color:#111;line-height:1.6;margin-bottom:16px" id="rQuestion"></div>
+    <div id="rOptions" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+  <div id="rFeedback" style="display:none;padding:12px 14px;border-radius:10px;font-size:13px;margin:10px 0;line-height:1.6;border:1px solid"></div>
+  <div class="btn-row" style="margin-top:0">
+    <button class="btn btn-green" id="rNextBtn" onclick="nextRQuestion()" style="display:none">
+      다음 문제 <i class="ti ti-arrow-right"></i>
+    </button>
+  </div>
+</div>
+
+<!-- 종합 결과 뷰 -->
+<div id="totalView" class="hidden">
+  <div class="final-top" style="margin-bottom:10px">
+    <div class="final-hero" id="totalArHero">
+      <div class="final-hero-label">AR 지수</div>
+      <div class="final-hero-val" id="totalAR">—</div>
+      <div class="final-hero-sub">읽기 가능 수준<br>(ATOS 기준)</div>
+    </div>
+    <div class="final-hero" id="totalCefrHero">
+      <div class="final-hero-label">CEFR 레벨</div>
+      <div class="final-hero-val" id="totalCEFR">—</div>
+      <div class="final-hero-sub" id="totalCefrDesc">—</div>
+    </div>
+  </div>
+  <div class="card" style="padding:1rem 1.25rem;margin-bottom:10px">
+    <div class="level-steps" id="totalLsteps">
+      <div class="lstep" id="tls0"></div><div class="lstep" id="tls1"></div>
+      <div class="lstep" id="tls2"></div><div class="lstep" id="tls3"></div>
+      <div class="lstep" id="tls4"></div><div class="lstep" id="tls5"></div>
+    </div>
+    <div class="lnames">
+      <div class="lname" id="tln0">A1</div><div class="lname" id="tln1">A2</div>
+      <div class="lname" id="tln2">B1</div><div class="lname" id="tln3">B2</div>
+      <div class="lname" id="tln4">C1</div><div class="lname" id="tln5">C2</div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="card-label">영역별 점수</div>
+    <div id="totalScoreCards" style="display:flex;flex-direction:column;gap:10px">
+      <!-- JS로 동적 생성 -->
+      <div class="bar-row"><span class="bar-lbl">스피킹</span><div class="bar-track"><div class="bar-fill" id="tbSpeak" style="background:#1D9E75"></div></div><span class="bar-pct" id="tbSpeakP">—</span></div>
+      <div class="bar-row"><span class="bar-lbl">독해</span><div class="bar-track"><div class="bar-fill" id="tbRead" style="background:#185FA5"></div></div><span class="bar-pct" id="tbReadP">—</span></div>
+      <div class="bar-row"><span class="bar-lbl">어휘</span><div class="bar-track"><div class="bar-fill" id="tbVocab" style="background:#534AB7"></div></div><span class="bar-pct" id="tbVocabP">—</span></div>
+      <div class="bar-row"><span class="bar-lbl">문법</span><div class="bar-track"><div class="bar-fill" id="tbGram" style="background:#BA7517"></div></div><span class="bar-pct" id="tbGramP">—</span></div>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="card-label">레벨업까지 필요한 학습 시간</div>
+    <div id="totalCambridgeHours"></div>
+    <div style="font-size:10px;color:#bbb;margin-top:10px;font-family:monospace;line-height:1.5">
+      📎 출처: Cambridge English Guided Learning Hours Research (Cambridge University Press, 2018)<br>
+      ※ 개인 학습 환경에 따라 차이가 있을 수 있습니다
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:10px">
+    <div class="card-label">매일 학습 가이드</div>
+    <div style="font-size:11px;color:#aaa;font-family:monospace;margin-bottom:12px">💡 일반적인 영어 교육 권장 가이드입니다</div>
+    <div id="totalDailyGuide"></div>
+  </div>
+  <div style="background:#f8f8f6;border-radius:10px;padding:12px 14px;margin-bottom:1.5rem;border:1px solid #eee">
+    <div style="font-size:11px;color:#aaa;line-height:1.7;font-family:monospace">
+      ⚠️ 이 결과는 Cambridge English 공식 어휘 목록 및 KET/PET 문제 유형을 기반으로 제작된 <strong>참고용 평가</strong>입니다.<br>
+      공식 인증이 필요하다면 Cambridge English, TOEFL Jr. 등 공인 시험을 권장합니다.
+    </div>
+  </div>
+  <div style="text-align:center">
+    <button class="btn btn-green" style="display:inline-flex;width:auto;flex:none;padding:13px 30px;font-size:15px" onclick="restartTest()">
+      <i class="ti ti-refresh"></i> 처음부터 다시
+    </button>
+  </div>
+</div>
+
+</div>
+
+<script>
+
+// Cambridge English Guided Learning Hours (Cambridge University Press, 2018)
+const CAMBRIDGE_HOURS = {
+  'A1':{adultLabel:'100~150시간',childLabel:'180~230시간',childMin:180,childMax:230,next:'A2'},
+  'A2':{adultLabel:'150~200시간',childLabel:'200~250시간',childMin:200,childMax:250,next:'B1'},
+  'B1':{adultLabel:'180~260시간',childLabel:'220~270시간',childMin:220,childMax:270,next:'B2'},
+  'B2':{adultLabel:'약 200시간', childLabel:'약 250시간', childMin:250,childMax:250,next:'C1'},
+  'C1':{adultLabel:'약 200시간', childLabel:'약 250시간', childMin:250,childMax:250,next:'C2'},
+  'C2':{adultLabel:'—',         childLabel:'—',          childMin:0,  childMax:0,  next:'최고 레벨'},
+};
+
+function renderCambridgeHours(cefrInfo, targetId){
+  const ch = CAMBRIDGE_HOURS[cefrInfo.cefr] || CAMBRIDGE_HOURS['B1'];
+  const monthMin = ch.childMin>0 ? Math.round(ch.childMin/30*10)/10 : 0;
+  const monthMax = ch.childMax>0 ? Math.round(ch.childMax/30*10)/10 : 0;
+  const monthStr = ch.childMin===ch.childMax ? `약 ${monthMin}개월` : `약 ${monthMin}~${monthMax}개월`;
+  document.getElementById(targetId).innerHTML=`
+    <div style="font-size:13px;color:#555;margin-bottom:12px">
+      현재 <strong style="color:${cefrInfo.color}">${cefrInfo.cefr}</strong>
+      → 다음 목표 <strong style="color:${cefrInfo.color}">${ch.next}</strong>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="background:#f8f8f6;border-radius:10px;padding:13px">
+        <div style="font-size:10px;font-family:monospace;color:#aaa;margin-bottom:5px;text-transform:uppercase">성인 기준</div>
+        <div style="font-size:18px;font-weight:700;font-family:monospace;color:#185FA5">${ch.adultLabel}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:3px">동기 높은 성인 학습자</div>
+      </div>
+      <div style="background:#f8f8f6;border-radius:10px;padding:13px">
+        <div style="font-size:10px;font-family:monospace;color:#aaa;margin-bottom:5px;text-transform:uppercase">한국 초중등 기준</div>
+        <div style="font-size:18px;font-weight:700;font-family:monospace;color:${cefrInfo.color}">${ch.childLabel}</div>
+        <div style="font-size:11px;color:#aaa;margin-top:3px">EFL 환경 아동·청소년</div>
+      </div>
+    </div>
+    ${ch.childMin>0 ? `<div style="margin-top:10px;padding:10px 12px;background:#f0faf5;border-radius:8px;border:1px solid #b8e8d4">
+      <div style="font-size:12px;color:#0F6E56;line-height:1.6">💡 하루 1시간씩 꾸준히 공부하면 한국 초중등 학생 기준 <strong>${monthStr}</strong> 소요 예상</div>
+    </div>` : ''}
+  `;
+}
+
+function renderDailyGuide(cefrInfo, targetId){
+  const DAILY_GUIDE={
+    'A1':[{icon:'🗣',skill:'스피킹',time:'매일 10분',tip:'기초 단어와 짧은 문장을 소리 내어 반복'},{icon:'👂',skill:'리스닝',time:'매일 15분',tip:'영어 동요, 짧은 영상으로 소리 익히기'},{icon:'📖',skill:'리딩',time:'매일 15분',tip:'그림책·파닉스 리더스 소리 내어 읽기'}],
+    'A2':[{icon:'🗣',skill:'스피킹',time:'매일 10분',tip:'짧은 문장 쉐도잉으로 발음 교정'},{icon:'👂',skill:'리스닝',time:'매일 15분',tip:'영어 애니메이션·영상 자막 보며 듣기'},{icon:'📖',skill:'리딩',time:'매일 20분',tip:'레벨에 맞는 리더스북 소리 내어 읽기'}],
+    'B1':[{icon:'🗣',skill:'스피킹',time:'매일 10분',tip:'원어민 음성 듣고 따라 읽는 쉐도잉'},{icon:'👂',skill:'리스닝',time:'매일 20분',tip:'팟캐스트·TED-Ed로 억양·리듬 흡수'},{icon:'📖',skill:'리딩',time:'매일 20분',tip:'챕터북·영문 기사 소리 내어 읽기'}],
+    'B2':[{icon:'🗣',skill:'스피킹',time:'매일 15분',tip:'다양한 주제로 쉐도잉 & 프리스피킹'},{icon:'👂',skill:'리스닝',time:'매일 20분',tip:'자막 없이 영상 보기, 딕테이션 연습'},{icon:'📖',skill:'리딩',time:'매일 20분',tip:'영어 소설·뉴스기사 묵독 + 소리 내어 읽기'}],
+    'C1':[{icon:'🗣',skill:'스피킹',time:'매일 15분',tip:'토론·프레젠테이션 형식 스피킹 연습'},{icon:'👂',skill:'리스닝',time:'매일 20분',tip:'다양한 억양·방언의 콘텐츠 청취'},{icon:'📖',skill:'리딩',time:'매일 20분',tip:'고급 원서·전문 아티클 정독'}],
+    'C2':[{icon:'🗣',skill:'스피킹',time:'매일 15분',tip:'뉘앙스·관용표현 중심 고급 스피킹'},{icon:'👂',skill:'리스닝',time:'매일 20분',tip:'방언·전문 분야 콘텐츠 다양하게 청취'},{icon:'📖',skill:'리딩',time:'매일 20분',tip:'문학·학술 텍스트 심층 독해'}],
+  };
+  const guide = DAILY_GUIDE[cefrInfo.cefr] || DAILY_GUIDE['B1'];
+  document.getElementById(targetId).innerHTML = guide.map((g,i)=>`
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:10px 0;${i<guide.length-1?'border-bottom:1px solid #f0f0ee':''}">
+      <div style="font-size:20px;flex-shrink:0;margin-top:1px">${g.icon}</div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <span style="font-size:13px;font-weight:600;color:#111">${g.skill}</span>
+          <span style="font-size:11px;font-family:monospace;background:#f0f0ee;color:#666;padding:2px 8px;border-radius:20px">${g.time}</span>
+        </div>
+        <div style="font-size:12px;color:#888;line-height:1.5">${g.tip}</div>
+      </div>
+    </div>`).join('');
+}
+let AZURE_KEY    = '';
+let AZURE_REGION = 'koreacentral';
+
+// AR 지수 → CEFR 변환
+// AR 지수는 1~12 스케일, CEFR과 대응
+const AR_TO_CEFR = [
+  {maxAR: 2.0, cefr:"A1", idx:0, desc:"입문", color:"#3B6D11", bg:"#EAF3DE"},
+  {maxAR: 3.5, cefr:"A2", idx:1, desc:"기초", color:"#3B6D11", bg:"#EAF3DE"},
+  {maxAR: 5.5, cefr:"B1", idx:2, desc:"초중급", color:"#854F0B", bg:"#FAEEDA"},
+  {maxAR: 7.5, cefr:"B2", idx:3, desc:"중급", color:"#185FA5", bg:"#E6F1FB"},
+  {maxAR: 9.5, cefr:"C1", idx:4, desc:"상급", color:"#534AB7", bg:"#EEEDFE"},
+  {maxAR: 99,  cefr:"C2", idx:5, desc:"최상급", color:"#993556", bg:"#FBEAF0"},
+];
+
+// CEFR별 학습 조언
+const CEFR_ADVICE = {
+  "A1": "영어 기본 발음 규칙부터 시작하세요. 짧은 단어와 기초 문장을 매일 10분씩 소리 내어 읽는 것이 가장 효과적입니다.",
+  "A2": "짧은 문장을 천천히 또렷하게 읽는 연습을 꾸준히 하세요. 원어민 음성을 듣고 따라 읽는 쉐도잉이 효과적입니다.",
+  "B1": "억양과 리듬에 집중하며 쉐도잉 연습을 늘려보세요. 팟캐스트나 영상 콘텐츠로 자연스러운 억양을 익히세요.",
+  "B2": "강세 패턴과 연음 현상을 집중적으로 연습하면 더 자연스러워집니다. 다양한 주제의 텍스트를 소리 내어 읽어보세요.",
+  "C1": "다양한 주제와 억양으로 스피킹의 폭을 넓혀보세요. 토론, 프레젠테이션 등 고급 스피킹 활동을 추천합니다.",
+  "C2": "원어민 수준에 가깝습니다. 억양의 미묘한 뉘앙스와 다양한 방언을 접해보세요.",
+};
+
+// 난이도별 문장 풀 (각 문장에 AR 지수 태깅)
+const POOL = {
+  1: [
+    {text:"I wake up at seven every morning.",                                                                          ar:1.2},
+    {text:"She has a cat and a dog at home.",                                                                           ar:1.4},
+    {text:"We eat lunch at school every day.",                                                                          ar:1.3},
+    {text:"He likes to play soccer with his friends.",                                                                  ar:1.8},
+    {text:"The sky is blue and the sun is bright today.",                                                               ar:1.5},
+    {text:"My mom cooks dinner for us every evening.",                                                                  ar:1.6},
+    {text:"I drink water when I feel thirsty.",                                                                         ar:1.4},
+  ],
+  2: [
+    {text:"Please make sure the doors are locked before you leave.",                                                    ar:2.8},
+    {text:"I usually have coffee before heading to work in the morning.",                                               ar:2.5},
+    {text:"Can you recommend a good restaurant near the train station?",                                                ar:2.8},
+    {text:"She goes to the gym three times a week to stay healthy.",                                                    ar:3.1},
+    {text:"The library closes at nine on weekdays and six on weekends.",                                                ar:2.9},
+    {text:"We took a taxi to the airport because we were running late.",                                                ar:3.2},
+    {text:"I need to exchange some money before we go sightseeing today.",                                              ar:3.0},
+  ],
+  3: [
+    {text:"It took me a while to get used to living alone, but I enjoy the independence.",                              ar:4.5},
+    {text:"We need to finalize the quarterly report before the board meeting on Friday.",                               ar:5.0},
+    {text:"I'd like to schedule a meeting for next Tuesday if that works for everyone.",                                ar:4.5},
+    {text:"Many young people move to cities to find better job opportunities and a higher quality of life.",            ar:5.6},
+    {text:"The thunderstorm knocked out power to several neighborhoods throughout the city last night.",                ar:4.8},
+    {text:"She carefully arranged the photographs in chronological order to preserve each precious memory.",            ar:6.2},
+    {text:"The latest smartphone update includes several security patches and improves overall battery performance.",   ar:6.0},
+  ],
+  4: [
+    {text:"Our quarterly revenue exceeded projections due to increased demand in the Asian market.",                    ar:7.4},
+    {text:"The government's new economic policy has sparked considerable debate among financial experts nationwide.",   ar:7.1},
+    {text:"The breathtaking landscape stretched endlessly across the horizon, dotted with ancient oak trees.",          ar:6.8},
+    {text:"Scientists have discovered a new species of deep-sea fish near the Pacific Ocean floor.",                    ar:6.5},
+    {text:"The merger will significantly restructure operations and streamline our global supply chain.",               ar:8.2},
+    {text:"Effective communication requires not only speaking clearly but also listening attentively to others.",       ar:7.0},
+    {text:"The documentary explored the complex relationship between technology and modern human behavior.",            ar:7.3},
+  ],
+  5: [
+    {text:"The phenomenon of bioluminescence occurs when living organisms produce and emit light through chemical reactions.", ar:8.4},
+    {text:"Despite the unprecedented challenges, the community demonstrated remarkable resilience throughout the crisis.",    ar:8.9},
+    {text:"Cognitive behavioral therapy helps patients identify and modify deeply ingrained negative thought patterns.",      ar:9.8},
+    {text:"Machine learning models require extensive training data to achieve reliable performance across diverse scenarios.", ar:9.6},
+    {text:"The algorithm processes thousands of data points simultaneously to generate highly accurate predictions.",         ar:9.2},
+    {text:"The unprecedented polarization of public discourse has made constructive dialogue increasingly difficult.",        ar:10.2},
+    {text:"Archaeologists uncovered extraordinarily well-preserved artifacts that shed new light on ancient civilizations.",  ar:9.5},
+  ],
+};
+
+const DIFF_INFO = {
+  1:{label:"Lv.1 · 입문",   color:"#3B6D11", bg:"#EAF3DE"},
+  2:{label:"Lv.2 · 기초",   color:"#3B6D11", bg:"#EAF3DE"},
+  3:{label:"Lv.3 · 초중급", color:"#854F0B", bg:"#FAEEDA"},
+  4:{label:"Lv.4 · 중급",   color:"#185FA5", bg:"#E6F1FB"},
+  5:{label:"Lv.5 · 상급",   color:"#534AB7", bg:"#EEEDFE"},
+};
+
+function arToCefr(ar){
+  return AR_TO_CEFR.find(r=>ar<=r.maxAR) || AR_TO_CEFR[AR_TO_CEFR.length-1];
+}
+
+function scoreColor(v){
+  if(v>=80)return'#1D9E75';if(v>=65)return'#185FA5';if(v>=45)return'#BA7517';return'#A32D2D';
+}
+
+// 핵심: 점수 × 문장AR = 이 사람이 실제로 읽어낸 AR
+// 5문장 가중 평균 → 최종 AR
+function calcFinalAR(scores){
+  // 가중치: 점수가 높을수록, 난이도가 높을수록 신뢰도 높음
+  const diffW = {1:0.6, 2:0.8, 3:1.0, 4:1.2, 5:1.4};
+  let num=0, den=0;
+  scores.forEach(s=>{
+    const perf = (s.pronun*0.40 + s.fluency*0.30 + s.prosody*0.20 + s.complete*0.10) / 100;
+    const earnedAR = s.ar * perf;                    // 이 문장에서 실제 읽어낸 AR
+    const w = diffW[s.diff] * (0.3 + 0.7*perf);     // 잘 읽을수록 가중치 높음
+    num += earnedAR * w;
+    den += w;
+  });
+  return Math.max(0.5, Math.min(12, parseFloat((num/den).toFixed(1))));
+}
+
+function calcOverall(p,f,c,pr){ return Math.round(p*0.40+f*0.30+pr*0.20+c*0.10); }
+function adaptDiff(score, diff){
+  if(score>=85) return Math.min(5,diff+1);
+  if(score<55)  return Math.max(1,diff-1);
+  return diff;
+}
+
+let ST = {};
+
+function init(){
+  ST = {
+    round:0, diff:3,
+    scores:[],
+    used:{1:[],2:[],3:[],4:[],5:[]},
+    isRec:false, recog:null,
+    sdkLoaded: ST.sdkLoaded||false,
+    cur:null,
+  };
+  document.getElementById('roundMinis').innerHTML='';
+  document.getElementById('errBox').style.display='none';
+  document.getElementById('testView').classList.remove('hidden');
+  document.getElementById('finalView').classList.add('hidden');
+  updateProg();
+  loadSent();
+}
+
+function loadSent(){
+  const pool = POOL[ST.diff];
+  const used = ST.used[ST.diff];
+  const avail = pool.filter(s=>!used.includes(s.text));
+  const pick = avail.length>0 ? avail[Math.floor(Math.random()*avail.length)] : pool[Math.floor(Math.random()*pool.length)];
+  ST.used[ST.diff].push(pick.text);
+  ST.cur = {...pick, diff:ST.diff};
+
+  const di = DIFF_INFO[ST.diff];
+  document.getElementById('diffBadge').textContent=di.label;
+  document.getElementById('diffBadge').style.background=di.bg;
+  document.getElementById('diffBadge').style.color=di.color;
+  document.getElementById('arTag').textContent=`AR ${pick.ar}`;
+  document.getElementById('sentBox').textContent=pick.text;
+  setStatus('','');
+  document.getElementById('loadingBar').classList.remove('on');
+}
+
+function updateProg(){
+  const r=ST.round;
+  document.getElementById('progLabel').textContent=`${r+1} / 5`;
+  document.getElementById('progFill').style.width=(r/5*100)+'%';
+  for(let i=0;i<5;i++){
+    const d=document.getElementById('dot'+i);
+    const sc=ST.scores[i];
+    if(i<r){
+      const ok=sc&&sc.overall>=60;
+      d.className='rdot '+(ok?'done':'fail');
+      d.textContent=sc?sc.overall:'?';
+    } else if(i===r){
+      d.className='rdot cur'; d.textContent=i+1;
+    } else {
+      d.className='rdot'; d.textContent=i+1;
+    }
+  }
+}
+
+function addMini(round, score, text, diff, ar, earnedAR){
+  const di=DIFF_INFO[diff];
+  const ok=score>=60;
+  const el=document.createElement('div');
+  el.className='round-mini';
+  el.style.cssText=`background:${ok?'#f8fffe':'#fff8f8'};border-color:${ok?'#b8e8d4':'#fca5a5'}`;
+  el.innerHTML=`
+    <div class="round-mini-left">
+      <div class="round-mini-meta" style="color:${di.color}">${round+1}번째 · ${di.label} · AR ${ar}</div>
+      <div class="round-mini-text">"${text.length>48?text.slice(0,48)+'…':text}"</div>
+    </div>
+    <div class="round-mini-right">
+      <div class="round-mini-score" style="color:${ok?'#1D9E75':'#A32D2D'}">${score}</div>
+      <div class="round-mini-ar">AR ${earnedAR.toFixed(1)} 달성</div>
+    </div>`;
+  document.getElementById('roundMinis').appendChild(el);
+}
+
+function showFinal(){
+  const sc=ST.scores;
+  const finalAR = calcFinalAR(sc);
+  const cefrInfo = arToCefr(finalAR);
+
+  // AR + CEFR 히어로
+  document.getElementById('arHero').style.background=cefrInfo.bg;
+  document.getElementById('finalAR').style.color=cefrInfo.color;
+  document.getElementById('finalAR').textContent=finalAR.toFixed(1);
+
+  document.getElementById('cefrHero').style.background=cefrInfo.bg;
+  document.getElementById('finalCEFR').style.color=cefrInfo.color;
+  document.getElementById('finalCEFR').textContent=cefrInfo.cefr;
+  document.getElementById('cefrDesc').textContent=cefrInfo.desc;
+  document.getElementById('cefrDesc').style.color=cefrInfo.color;
+
+  // CEFR 단계 바
+  document.getElementById('lsteps').style.setProperty('--lc',cefrInfo.color);
+  for(let i=0;i<6;i++){
+    const el=document.getElementById('ls'+i);
+    const ne=document.getElementById('ln'+i);
+    el.style.setProperty('--lc',cefrInfo.color);
+    setTimeout(()=>{
+      el.classList.toggle('on',i<=cefrInfo.idx);
+      el.classList.toggle('cur',i===cefrInfo.idx);
+    },i*80);
+    ne.className='lname'+(i===cefrInfo.idx?' cur':'');
+    ne.style.color=i===cefrInfo.idx?cefrInfo.color:'';
+  }
+
+  // 문장별 요약
+  document.getElementById('finalRounds').innerHTML=sc.map((s,i)=>{
+    const di=DIFF_INFO[s.diff];
+    const ok=s.overall>=60;
+    const earnedAR=(s.ar*(s.pronun*0.4+s.fluency*0.3+s.prosody*0.2+s.complete*0.1)/100).toFixed(1);
+    return`<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f0f0ee${i===sc.length-1?';border-bottom:none':''}">
+      <div style="width:24px;height:24px;border-radius:50%;background:${ok?'#1D9E75':'#E24B4A'};color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${i+1}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:11px;font-family:monospace;color:${di.color};margin-bottom:2px">${di.label} · AR ${s.ar}</div>
+        <div style="font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">"${s.text.length>42?s.text.slice(0,42)+'…':s.text}"</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:18px;font-weight:700;font-family:monospace;color:${ok?'#1D9E75':'#A32D2D'}">${s.overall}</div>
+        <div style="font-size:10px;font-family:monospace;color:#aaa">AR ${earnedAR}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // 평균 세부 점수
+  const avg=(key)=>Math.round(sc.reduce((a,s)=>a+s[key],0)/sc.length);
+  const aP=avg('pronun'), aF=avg('fluency'), aC=avg('complete'), aPr=avg('prosody');
+  [['P',aP,'#1D9E75'],['F',aF,'#534AB7'],['C',aC,'#185FA5'],['Pr',aPr,'#BA7517']].forEach(([id,v,c])=>{
+    document.getElementById('d'+id).textContent=v;
+    document.getElementById('d'+id).style.color=scoreColor(v);
+    setTimeout(()=>{ document.getElementById('db'+id).style.width=v+'%'; },200);
+  });
+
+  // 피드백
+  const weakest=[
+    {label:"발음 정확도",val:aP},
+    {label:"유창성",val:aF},
+    {label:"운율/억양",val:aPr},
+    {label:"완성도",val:aC},
+  ].sort((a,b)=>a.val-b.val)[0];
+  const baseAdvice = CEFR_ADVICE[cefrInfo.cefr];
+  const fb = weakest.val<65
+    ? `${weakest.label}(평균 ${weakest.val}점)이 가장 낮습니다. ${baseAdvice}`
+    : baseAdvice;
+  document.getElementById('feedbackText').textContent=fb;
+
+  renderCambridgeHours(cefrInfo, 'cambridgeHours');
+  renderDailyGuide(cefrInfo, 'dailyGuide');
+
+  document.getElementById('testView').classList.add('hidden');
+  document.getElementById('finalView').classList.remove('hidden');
+  window.scrollTo({top:0,behavior:'smooth'});
+
+  // 스피킹 완료 → 2단계 리딩 테스트 버튼
+  setTimeout(()=>{
+    const old = document.getElementById('goReadingBtn');
+    if(old) old.remove();
+    const wrap = document.createElement('div');
+    wrap.id = 'goReadingBtn';
+    wrap.style.cssText = 'text-align:center;margin:1.5rem 0 0.5rem';
+    wrap.innerHTML = `
+      <div style="font-size:13px;color:#888;margin-bottom:10px;line-height:1.6">
+        스피킹 테스트 완료!<br>2단계 테스트로 <strong>독해·어휘·문법</strong>까지 측정해 더 정확한 레벨을 확인하세요.
+      </div>
+      <button onclick="startReadingTest(${finalAR},'${cefrInfo.cefr}')"
+        style="display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:10px;background:#185FA5;color:white;border:none;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit">
+        <i class="ti ti-book"></i> 2단계: 독해·어휘·문법 테스트 시작
+      </button>`;
+    document.getElementById('finalView').appendChild(wrap);
+  }, 300);
+}
+
+function setStatus(msg,type){
+  const el=document.getElementById('statusBox');
+  el.className='status-box'+(type?' '+type:'');
+  el.textContent=msg;
+}
+
+function toggleRec(){ if(ST.isRec)stopRec(); else startRec(); }
+
+async function startRec(){
+  if(!ST.sdkLoaded||typeof SpeechSDK==='undefined'){
+    showErr('Azure SDK 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+    return;
+  }
+  ST.isRec=true;
+  document.getElementById('recBtn').className='btn btn-red btn-rec';
+  document.getElementById('recIcon').className='ti ti-player-stop';
+  document.getElementById('recLabel').textContent='중단';
+  document.getElementById('wave').classList.add('on');
+  document.getElementById('errBox').style.display='none';
+  setStatus('🎙 듣고 있습니다... 문장을 읽어주세요','listening');
+
+  try{
+    const sc=SpeechSDK.SpeechConfig.fromSubscription(AZURE_KEY,AZURE_REGION);
+    sc.speechRecognitionLanguage='en-US';
+    const ac=SpeechSDK.AudioConfig.fromDefaultMicrophoneInput();
+    const pc=new SpeechSDK.PronunciationAssessmentConfig(
+      ST.cur.text,
+      SpeechSDK.PronunciationAssessmentGradingSystem.HundredMark,
+      SpeechSDK.PronunciationAssessmentGranularity.Word,
+      true
+    );
+    try{ pc.enableProsodyAssessment=true; }catch(e){}
+
+    ST.recog=new SpeechSDK.SpeechRecognizer(sc,ac);
+    pc.applyTo(ST.recog);
+
+    ST.recog.recognized=(_,e)=>{
+      if(e.result.reason===SpeechSDK.ResultReason.RecognizedSpeech){
+        document.getElementById('loadingBar').classList.add('on');
+        setStatus('🔍 Azure AI 분석 중...','analyzing');
+
+        const pr=SpeechSDK.PronunciationAssessmentResult.fromResult(e.result);
+        const pronun  = Math.round(pr.pronunciationScore||0);
+        const fluency = Math.round(pr.fluencyScore||0);
+        const complete= Math.round(pr.completenessScore||0);
+        const prosody = Math.round(pr.prosodyScore||0);
+        const overall = calcOverall(pronun,fluency,complete,prosody);
+        const earnedAR = parseFloat((ST.cur.ar*(pronun*0.4+fluency*0.3+prosody*0.2+complete*0.1)/100).toFixed(1));
+
+        ST.scores.push({
+          overall,pronun,fluency,complete,prosody,
+          ar:ST.cur.ar, diff:ST.cur.diff, text:ST.cur.text
+        });
+
+        stopRecUI();
+        document.getElementById('loadingBar').classList.remove('on');
+        setStatus('','');
+
+        addMini(ST.round, overall, ST.cur.text, ST.cur.diff, ST.cur.ar, earnedAR);
+
+        ST.round++;
+        updateProg();
+
+        if(ST.round>=5){
+          setTimeout(showFinal,600);
+        } else {
+          ST.diff=adaptDiff(overall,ST.cur.diff);
+          setTimeout(loadSent,700);
+        }
+      }
+    };
+
+    ST.recog.canceled=(_,e)=>{
+      stopRecUI();
+      document.getElementById('loadingBar').classList.remove('on');
+      setStatus('','');
+      if(e.reason===SpeechSDK.CancellationReason.Error) showErr('Azure 오류: '+e.errorDetails);
+    };
+
+    ST.recog.recognizeOnceAsync(()=>{}, err=>{ stopRecUI(); showErr('마이크 오류: '+err); setStatus('',''); });
+    setTimeout(()=>{ if(ST.isRec) setStatus('💬 말씀을 마치시면 자동 분석됩니다...','analyzing'); },3500);
+
+  }catch(e){ stopRecUI(); showErr('오류: '+e.message); setStatus('',''); }
+}
+
+function stopRec(){
+  if(ST.recog){ST.recog.close();ST.recog=null;}
+  stopRecUI();
+  document.getElementById('loadingBar').classList.remove('on');
+  setStatus('','');
+}
+
+function stopRecUI(){
+  ST.isRec=false;
+  document.getElementById('recBtn').className='btn btn-green btn-rec';
+  document.getElementById('recIcon').className='ti ti-microphone';
+  document.getElementById('recLabel').textContent='녹음 시작';
+  document.getElementById('wave').classList.remove('on');
+}
+
+function restartTest(){
+  document.getElementById('finalView').classList.add('hidden');
+  document.getElementById('readingView').classList.add('hidden');
+  document.getElementById('totalView').classList.add('hidden');
+  document.getElementById('testView').classList.remove('hidden');
+  const ob = document.getElementById('goReadingBtn');
+  if(ob) ob.remove();
+  init();
+}
+
+function changeKey(){
+  try { sessionStorage.removeItem('ao_key'); sessionStorage.removeItem('ao_region'); } catch(e){}
+  AZURE_KEY = ''; AZURE_REGION = 'koreacentral';
+  document.getElementById('finalView').classList.add('hidden');
+  document.getElementById('readingView').classList.add('hidden');
+  document.getElementById('totalView').classList.add('hidden');
+  document.getElementById('testView').classList.add('hidden');
+  document.getElementById('keyView').classList.remove('hidden');
+  document.getElementById('keyInput').value = '';
+}
+
+function showErr(msg){
+  const e=document.getElementById('errBox');
+  e.style.display='block'; e.textContent=msg;
+}
+
+// ─── 리딩 테스트 ───────────────────────────────────────────
+
+// Cambridge 공식 어휘 목록(YLE/KET/PET) 및 KET/PET 문제 유형 기반
+// 문제 유형: reading(독해), vocabulary(어휘), grammar(문법)
+// 각 레벨당 독해 4문제 + 어휘 4문제 + 문법 4문제 = 12문제 풀 → 랜덤 6문제 출제
+
+const READING_POOL = {
+  'A1': [
+    // 독해
+    {type:'reading', passage:'My name is Tom. I am eight years old. I have a dog. His name is Max. We play in the garden every day.',
+     q:'How old is Tom?', opts:['Seven','Eight','Nine','Ten'], ans:1, exp:'지문에서 "I am eight years old"라고 명시되어 있어요.'},
+    {type:'reading', passage:'Anna likes cats. She has two cats. One is black and one is white. She feeds them every morning.',
+     q:'How many cats does Anna have?', opts:['One','Two','Three','Four'], ans:1, exp:'"She has two cats"에서 확인할 수 있어요.'},
+    {type:'reading', passage:'It is sunny today. Ben and his sister go to the park. They play football and eat ice cream.',
+     q:'Where do Ben and his sister go?', opts:['School','Home','The park','The shop'], ans:2, exp:'"go to the park"에서 확인할 수 있어요.'},
+    {type:'reading', passage:'Lucy has a red bike. She rides her bike to school every day. It takes ten minutes.',
+     q:'What colour is Lucy\'s bike?', opts:['Blue','Green','Red','Yellow'], ans:2, exp:'"a red bike"에서 확인할 수 있어요.'},
+    // 어휘 (Cambridge YLE Starters 어휘 목록 기반)
+    {type:'vocabulary', q:'Which word means a place where you sleep?', opts:['Kitchen','Bedroom','Garden','Bathroom'], ans:1, exp:'Bedroom(침실)은 잠을 자는 공간이에요. Kitchen(부엌), Garden(정원), Bathroom(욕실)은 다른 공간이에요.'},
+    {type:'vocabulary', q:'Choose the correct word: "I drink _____ every morning." ', opts:['bread','milk','table','chair'], ans:1, exp:'마시는 것(drink)에는 milk(우유)가 어울려요. bread는 먹는 것, table과 chair는 가구예요.'},
+    {type:'vocabulary', q:'What do you use to write?', opts:['Spoon','Pencil','Pillow','Window'], ans:1, exp:'Pencil(연필)로 씁니다. Spoon(숟가락), Pillow(베개), Window(창문)는 쓰는 도구가 아니에요.'},
+    {type:'vocabulary', q:'Which animal can fly?', opts:['Dog','Fish','Bird','Cat'], ans:2, exp:'Bird(새)는 날 수 있어요. Dog(개), Fish(물고기), Cat(고양이)는 날지 않아요.'},
+    // 문법 (KET 문제 유형 기반)
+    {type:'grammar', q:'Choose the correct word: "She ___ a student."', opts:['am','is','are','be'], ans:1, exp:'She(3인칭 단수)에는 "is"를 써요. am은 I, are는 you/we/they와 함께 써요.'},
+    {type:'grammar', q:'"There ___ two books on the table."', opts:['is','am','are','be'], ans:2, exp:'복수 명사(two books)에는 "are"를 써요.'},
+    {type:'grammar', q:'"I ___ to school every day."', opts:['go','goes','going','gone'], ans:0, exp:'I(1인칭)와 현재 습관을 나타낼 때 "go"를 써요.'},
+    {type:'grammar', q:'"___ you like pizza?" "Yes, I do."', opts:['Are','Is','Do','Does'], ans:2, exp:'I/you/we/they로 묻는 일반동사 의문문에는 "Do"를 써요.'},
+  ],
+  'A2': [
+    // 독해
+    {type:'reading', passage:'Dear Kim, I am writing from London. The weather here is cold and rainy. I visited the British Museum yesterday. It was very interesting. I bought some postcards for you. See you next week! Sarah',
+     q:'Why is Sarah writing to Kim?', opts:['To ask for help','To share her trip experience','To invite Kim to London','To complain about weather'], ans:1, exp:'Sarah는 런던 여행 중 경험을 Kim에게 전하고 있어요.'},
+    {type:'reading', passage:'The school library opens at 8:30am and closes at 5:00pm Monday to Friday. On Saturdays it opens from 10am to 3pm. It is closed on Sundays.',
+     q:'What time does the library close on Saturdays?', opts:['5:00pm','3:00pm','8:30am','10:00am'], ans:1, exp:'"On Saturdays it opens from 10am to 3pm"에서 토요일 닫는 시간은 3pm이에요.'},
+    {type:'reading', passage:'NOTICE: The swimming pool will be closed for cleaning on Tuesday 15th March. It will reopen on Wednesday morning. We apologise for any inconvenience.',
+     q:'Why is the pool closed?', opts:['It is being repaired','It is being cleaned','There is no water','It is too cold'], ans:1, exp:'"closed for cleaning"에서 청소 때문에 닫는다는 걸 알 수 있어요.'},
+    {type:'reading', passage:'Jake loves cooking. He learned from his grandmother when he was young. Now he makes dinner for his family every weekend. His favourite dish is pasta.',
+     q:'Who taught Jake to cook?', opts:['His mother','His teacher','His grandmother','His friend'], ans:2, exp:'"He learned from his grandmother"에서 확인할 수 있어요.'},
+    // 어휘 (Cambridge YLE Movers/Flyers 어휘 목록 기반)
+    {type:'vocabulary', q:'Choose the word that means "very happy":', opts:['Angry','Delighted','Tired','Bored'], ans:1, exp:'Delighted는 "매우 기쁜"이라는 의미예요. Angry(화난), Tired(피곤한), Bored(지루한)은 다른 감정이에요.'},
+    {type:'vocabulary', q:'"The train ___ at 9:00." Choose the best word:', opts:['arrives','goes','walks','runs'], ans:0, exp:'교통수단이 도착할 때 "arrives"를 써요. 기차는 walk하거나 run하지 않아요.'},
+    {type:'vocabulary', q:'Which word is the opposite of "cheap"?', opts:['Small','Expensive','Easy','Fast'], ans:1, exp:'cheap(싼)의 반대말은 expensive(비싼)이에요.'},
+    {type:'vocabulary', q:'"She works in a hospital. She helps sick people." What is her job?', opts:['Teacher','Doctor','Driver','Cook'], ans:1, exp:'병원에서 아픈 사람들을 돕는 직업은 Doctor(의사)예요.'},
+    // 문법 (KET 문제 유형 기반)
+    {type:'grammar', q:'"I haven\'t seen that film ___."', opts:['already','yet','just','ever'], ans:1, exp:'부정문에서 "아직"의 의미는 "yet"이에요. "I haven\'t ... yet"은 아직 하지 않았음을 나타내요.'},
+    {type:'grammar', q:'"She ___ TV when I called."', opts:['watched','was watching','watches','has watched'], ans:1, exp:'과거 특정 시점에 진행 중이던 동작은 과거진행형(was watching)을 써요.'},
+    {type:'grammar', q:'"This is ___ book I\'ve ever read."', opts:['good','better','best','the best'], ans:3, exp:'"ever"와 함께 쓰는 최상급 표현은 "the best"예요.'},
+    {type:'grammar', q:'"You ___ wear a seatbelt in a car. It\'s the law."', opts:['should','must','can','might'], ans:1, exp:'법적 의무를 나타낼 때는 "must"를 써요. should는 권고, can은 능력/허가, might는 가능성이에요.'},
+  ],
+  'B1': [
+    // 독해
+    {type:'reading', passage:'Remote work has become increasingly popular since the pandemic. Many companies now offer flexible working arrangements, allowing employees to work from home some or all of the time. While this has benefits such as reduced commuting time, some workers report feeling isolated from their colleagues.',
+     q:'What is one disadvantage of remote work mentioned in the text?', opts:['Higher costs','Feeling isolated','More commuting','Less flexibility'], ans:1, exp:'"some workers report feeling isolated from their colleagues"에서 고립감이 단점으로 언급됐어요.'},
+    {type:'reading', passage:'Volunteering offers numerous benefits not only to communities but also to the volunteers themselves. Studies show that people who volunteer regularly report higher levels of happiness and lower stress. Additionally, volunteering can help develop new skills and expand professional networks.',
+     q:'According to the text, what is ONE benefit of volunteering for the volunteer?', opts:['Higher salary','Lower stress levels','Free travel','Better education'], ans:1, exp:'"volunteers themselves...lower stress"에서 자원봉사자 본인에게도 스트레스 감소 효과가 있다고 했어요.'},
+    {type:'reading', passage:'The local council has announced plans to build a new sports centre in the town centre. The project will cost approximately two million pounds and is expected to be completed by next spring. Local residents have been invited to share their views at a public meeting on Friday.',
+     q:'When is the sports centre expected to be finished?', opts:['This autumn','Next spring','Next winter','In two years'], ans:1, exp:'"expected to be completed by next spring"에서 확인할 수 있어요.'},
+    {type:'reading', passage:'Many teenagers spend several hours a day on social media. While these platforms help young people stay connected with friends, experts warn that excessive use can negatively affect sleep patterns and mental health. Setting time limits is often recommended.',
+     q:'What do experts recommend to address the issue?', opts:['Deleting social media','Setting time limits','Sleeping more','Spending more time online'], ans:1, exp:'"Setting time limits is often recommended"에서 직접 언급됐어요.'},
+    // 어휘 (Cambridge KET/PET 어휘 목록 기반)
+    {type:'vocabulary', q:'Choose the best word: "The doctor ___ the patient to rest for a week."', opts:['told','advised','warned','suggested'], ans:1, exp:'"advise someone to do something"이 의학적 조언에 가장 자연스러운 표현이에요.'},
+    {type:'vocabulary', q:'Which word means "to officially stop a law or rule"?', opts:['Abolish','Establish','Maintain','Introduce'], ans:0, exp:'Abolish는 "폐지하다"라는 의미예요. Establish(설립), Maintain(유지), Introduce(도입)는 반대 의미예요.'},
+    {type:'vocabulary', q:'"The project was ___ due to lack of funding." Choose the best word:', opts:['cancelled','reduced','extended','improved'], ans:0, exp:'자금 부족으로 프로젝트가 "취소됐다"는 의미이므로 cancelled가 적절해요.'},
+    {type:'vocabulary', q:'Choose the word closest in meaning to "enormous":', opts:['Tiny','Huge','Average','Narrow'], ans:1, exp:'Enormous와 Huge 모두 "매우 큰"이라는 의미예요.'},
+    // 문법 (PET 문제 유형 기반)
+    {type:'grammar', q:'"By the time we arrived, the film ___."', opts:['already started','had already started','has already started','was already start'], ans:1, exp:'과거 기준 이전에 완료된 일은 과거완료(had already started)를 써요.'},
+    {type:'grammar', q:'"She suggested ___ to the new restaurant."', opts:['to go','going','go','gone'], ans:1, exp:'suggest 다음에는 동명사(-ing)를 써요: "suggest going"'},
+    {type:'grammar', q:'"If I ___ more time, I would study abroad."', opts:['have','had','would have','will have'], ans:1, exp:'현재 사실과 반대되는 가정은 가정법 과거: "If I had..."를 써요.'},
+    {type:'grammar', q:'"The report ___ by Friday." Choose the correct passive form:', opts:['must complete','must be completing','must be completed','must have complete'], ans:2, exp:'수동태 조동사 표현: "must be + p.p." 형태인 "must be completed"가 맞아요.'},
+  ],
+  'B2': [
+    // 독해
+    {type:'reading', passage:'Urban farming has gained significant traction in recent years as cities seek sustainable food production solutions. Rooftop gardens and vertical farms not only reduce food miles but also contribute to urban biodiversity. However, critics point out that the initial investment costs can be prohibitive for many communities.',
+     q:'What limitation of urban farming is mentioned?', opts:['Lack of sunlight','High initial costs','Poor food quality','Limited crop variety'], ans:1, exp:'"initial investment costs can be prohibitive"에서 초기 비용이 높다는 한계가 언급됐어요.'},
+    {type:'reading', passage:'The concept of a four-day working week has been trialled by several companies with promising results. Productivity levels remained stable or improved in most cases, while employee wellbeing scores increased significantly. However, implementation challenges remain, particularly in customer-facing industries where continuous coverage is essential.',
+     q:'What was the outcome regarding productivity in most trials?', opts:['It significantly declined','It remained stable or improved','It was difficult to measure','It varied greatly'], ans:1, exp:'"Productivity levels remained stable or improved in most cases"에서 확인할 수 있어요.'},
+    {type:'reading', passage:'Microplastics have been detected in virtually every environment on Earth, from deep ocean trenches to mountain peaks. Scientists are still investigating the long-term health implications for both wildlife and humans. While some argue that current levels pose minimal risk, others advocate for immediate regulatory action.',
+     q:'What aspect of microplastics are scientists still researching?', opts:['Their origin','Their long-term health effects','How to produce them','Their colour'], ans:1, exp:'"Scientists are still investigating the long-term health implications"에서 확인할 수 있어요.'},
+    {type:'reading', passage:'Artificial intelligence is transforming the healthcare sector, with algorithms now capable of diagnosing certain conditions with accuracy rivalling that of experienced specialists. Nevertheless, ethical questions surrounding patient data privacy and the accountability of AI-driven decisions remain largely unresolved.',
+     q:'What concern about AI in healthcare is raised?', opts:['High cost of AI','Lack of accuracy','Patient data privacy issues','Shortage of doctors'], ans:2, exp:'"ethical questions surrounding patient data privacy"에서 개인정보 문제가 우려사항으로 언급됐어요.'},
+    // 어휘 (Cambridge PET/FCE 어휘 목록 기반)
+    {type:'vocabulary', q:'Choose the word that best completes the sentence: "The government\'s new policy was met with widespread ___."', opts:['applause','criticism','silence','confusion'], ans:1, exp:'"met with criticism"은 비판을 받다는 뜻으로, 정책에 대한 반응을 표현하는 데 자연스러워요.'},
+    {type:'vocabulary', q:'"Despite the ___ evidence, some people still deny climate change."', opts:['overwhelming','underwhelming','partial','minimal'], ans:0, exp:'"overwhelming evidence"는 "압도적인 증거"라는 의미로, 부정하기 어려운 상황을 강조해요.'},
+    {type:'vocabulary', q:'Which word is closest in meaning to "meticulous"?', opts:['Careless','Thorough','Rapid','Vague'], ans:1, exp:'Meticulous는 "꼼꼼한, 세심한"이라는 의미로 Thorough(철저한)와 가장 가까워요.'},
+    {type:'vocabulary', q:'"The negotiations ___ after both sides refused to compromise."', opts:['broke down','broke up','broke out','broke in'], ans:0, exp:'"Break down"은 협상이나 대화가 "결렬되다"라는 뜻이에요.'},
+    // 문법 (FCE 문제 유형 기반)
+    {type:'grammar', q:'"___ the bad weather, the event went ahead as planned."', opts:['Despite','Although','However','Even'], ans:0, exp:'"Despite + 명사/동명사"는 "~에도 불구하고"라는 의미예요. Although 뒤에는 절(주어+동사)이 와요.'},
+    {type:'grammar', q:'"I wish I ___ harder when I was at school."', opts:['studied','had studied','have studied','would study'], ans:1, exp:'wish로 시작하는 과거에 대한 후회는 "wish + had + p.p."를 써요.'},
+    {type:'grammar', q:'"The CEO is said ___ the company for personal reasons."', opts:['to leave','to have left','leaving','having left'], ans:1, exp:'"is said to have + p.p."는 과거에 일어난 일을 전달할 때 쓰는 구문이에요.'},
+    {type:'grammar', q:'"Not until he arrived ___ that the meeting had been cancelled."', opts:['he realised','did he realise','he did realise','had he realised'], ans:1, exp:'"Not until..."으로 시작하는 도치 구문에서는 "did he realise"처럼 조동사가 앞으로 나와요.'},
+  ],
+  'C1': [
+    // 독해
+    {type:'reading', passage:'The paradox of choice, a concept popularised by psychologist Barry Schwartz, posits that while some choice is undeniably better than none, an abundance of options can paradoxically lead to decision paralysis and diminished satisfaction. In consumer markets, this manifests as shoppers feeling overwhelmed and ultimately less content with their purchases, regardless of their objective quality.',
+     q:'What does the "paradox of choice" suggest about having too many options?', opts:['It always leads to better decisions','It can cause paralysis and lower satisfaction','It has no effect on satisfaction','It only affects consumer markets'], ans:1, exp:'"abundance of options can paradoxically lead to decision paralysis and diminished satisfaction"에서 확인할 수 있어요.'},
+    {type:'reading', passage:'Neuroplasticity — the brain\'s remarkable capacity to reorganise itself by forming new neural connections throughout life — has fundamentally challenged the long-held belief that the adult brain is essentially static. This discovery has profound implications for rehabilitation medicine, education, and our understanding of human potential.',
+     q:'What established belief does neuroplasticity challenge?', opts:['That children learn faster than adults','That the adult brain cannot change','That education improves the brain','That rehabilitation is ineffective'], ans:1, exp:'"challenged the long-held belief that the adult brain is essentially static"에서 성인 뇌가 변하지 않는다는 믿음을 반박한다고 했어요.'},
+    {type:'reading', passage:'The phenomenon of greenwashing — whereby companies make misleading environmental claims to attract eco-conscious consumers — has become increasingly prevalent. Regulatory bodies are now under mounting pressure to establish clearer standards for environmental marketing, as consumers grow more sophisticated in identifying disingenuous sustainability claims.',
+     q:'Why are regulatory bodies facing pressure?', opts:['Due to rising production costs','To address misleading environmental marketing','Because of consumer boycotts','To increase corporate profits'], ans:1, exp:'"Regulatory bodies are now under mounting pressure to establish clearer standards for environmental marketing"에서 직접 언급됐어요.'},
+    {type:'reading', passage:'Chronic loneliness, once dismissed as a mere emotional inconvenience, is now recognised by leading health authorities as a significant public health crisis, with physiological consequences comparable to smoking fifteen cigarettes daily. This recognition has prompted governments to appoint dedicated ministers for loneliness and invest in community-building initiatives.',
+     q:'How serious is chronic loneliness according to health authorities?', opts:['Mildly concerning','Comparable to heavy smoking','Only affects elderly people','Less serious than depression'], ans:1, exp:'"physiological consequences comparable to smoking fifteen cigarettes daily"에서 심각성을 설명했어요.'},
+    // 어휘 (Cambridge Advanced/Proficiency 수준)
+    {type:'vocabulary', q:'Choose the word closest in meaning to "ubiquitous":', opts:['Rare','Everywhere','Ancient','Complicated'], ans:1, exp:'Ubiquitous는 "어디에나 있는, 편재하는"이라는 의미예요.'},
+    {type:'vocabulary', q:'"The scientist\'s findings were ___ by subsequent research." Choose the best word:', opts:['refuted','validated','ignored','simplified'], ans:1, exp:'"validated by subsequent research"는 후속 연구에 의해 "검증됐다"는 의미예요.'},
+    {type:'vocabulary', q:'"His ___ remarks at the ceremony embarrassed everyone present."', opts:['eloquent','tactless','sincere','careful'], ans:1, exp:'Tactless는 "눈치 없는, 무례한"이라는 뜻으로, 사람들을 당황하게 만든 발언과 어울려요.'},
+    {type:'vocabulary', q:'Which word means "present everywhere simultaneously"?', opts:['Omnipotent','Omniscient','Omnipresent','Omnibenevolent'], ans:2, exp:'Omnipresent는 "어디에나 존재하는"이라는 의미예요. Omnipotent(전능한), Omniscient(전지한)은 다른 의미예요.'},
+    // 문법 (CAE 문제 유형 기반)
+    {type:'grammar', q:'"Rarely ___ such a compelling argument in academic discourse."', opts:['I have encountered','have I encountered','I encountered','did I encounter'], ans:1, exp:'"Rarely"로 시작하는 도치 구문: "Rarely + have + 주어 + p.p."가 정확한 형태예요.'},
+    {type:'grammar', q:'"The extent to ___ globalisation has transformed local cultures is debatable."', opts:['that','which','what','where'], ans:1, exp:'"to which"는 관계절에서 전치사+관계대명사 구조예요. "the extent to which..."는 고급 영어의 전형적 표현이에요.'},
+    {type:'grammar', q:'"Had the researchers ___ the flaw earlier, the study might have yielded different results."', opts:['identify','identified','been identifying','have identified'], ans:1, exp:'도치된 가정법 과거완료: "Had + 주어 + p.p." = "If the researchers had identified..."'},
+    {type:'grammar', q:'"No sooner ___ than the alarm sounded."', opts:['had he left','he had left','did he leave','he left'], ans:0, exp:'"No sooner + had + 주어 + p.p."는 "~하자마자"라는 뜻의 도치 구문이에요.'},
+  ],
+};
+
+// 스피킹 레벨에 맞는 문제 풀 선택 (한 단계 아래 ~ 같은 레벨 혼합)
+function getReadingPool(speakingCefr){
+  const order = ['A1','A2','B1','B2','C1'];
+  const idx = order.indexOf(speakingCefr);
+  const levels = idx <= 0
+    ? [order[0]]
+    : [order[idx-1], order[idx]];
+  let pool = [];
+  levels.forEach(lv=>{ if(READING_POOL[lv]) pool = pool.concat(READING_POOL[lv]); });
+  return pool;
+}
+
+// 6문제 랜덤 선택 (독해 2, 어휘 2, 문법 2)
+function pickQuestions(pool){
+  const byType = {reading:[], vocabulary:[], grammar:[]};
+  pool.forEach(q=> byType[q.type].push(q));
+  const shuffle = arr => arr.sort(()=>Math.random()-0.5);
+  return [
+    ...shuffle(byType.reading).slice(0,2),
+    ...shuffle(byType.vocabulary).slice(0,2),
+    ...shuffle(byType.grammar).slice(0,2),
+  ].sort(()=>Math.random()-0.5);
+}
+
+let RS = {
+  questions:[], current:0,
+  scores:{reading:[], vocabulary:[], grammar:[]},
+  speakingAR:0, speakingCefr:'',
+  answered:false,
+};
+
+function startReadingTest(speakingAR, speakingCefr){
+  RS.speakingAR = speakingAR;
+  RS.speakingCefr = speakingCefr;
+  RS.scores = {reading:[], vocabulary:[], grammar:[]};
+  RS.current = 0;
+  RS.answered = false;
+
+  const pool = getReadingPool(speakingCefr);
+  RS.questions = pickQuestions(pool);
+
+  document.getElementById('finalView').classList.add('hidden');
+  document.getElementById('readingView').classList.remove('hidden');
+  window.scrollTo({top:0, behavior:'smooth'});
+  showRQuestion();
+}
+
+const R_TYPE_LABELS = {
+  reading:    {label:'독해 Reading',    badge:'📖 Reading'},
+  vocabulary: {label:'어휘 Vocabulary', badge:'📝 Vocabulary'},
+  grammar:    {label:'문법 Grammar',    badge:'🔤 Grammar'},
+};
+
+function showRQuestion(){
+  const total = RS.questions.length;
+  const idx = RS.current;
+  const q = RS.questions[idx];
+  RS.answered = false;
+
+  document.getElementById('rProgFill').style.width = (idx/total*100)+'%';
+  document.getElementById('rProgLabel').textContent = `${idx+1} / ${total}`;
+  document.getElementById('rTypeBadge').textContent = R_TYPE_LABELS[q.type].badge;
+  document.getElementById('rTypeLabel').textContent = R_TYPE_LABELS[q.type].label;
+
+  const passage = document.getElementById('rPassage');
+  if(q.type==='reading' && q.passage){
+    passage.style.display='block';
+    passage.textContent = q.passage;
+  } else {
+    passage.style.display='none';
+  }
+
+  document.getElementById('rQuestion').textContent = q.q;
+  document.getElementById('rFeedback').style.display='none';
+  document.getElementById('rNextBtn').style.display='none';
+
+  const opts = document.getElementById('rOptions');
+  opts.innerHTML = q.opts.map((o,i)=>`
+    <button onclick="answerR(${i})" style="text-align:left;padding:12px 14px;border-radius:10px;border:1.5px solid #ddd;background:white;font-size:14px;cursor:pointer;font-family:inherit;color:#111;transition:all 0.15s;width:100%"
+      onmouseover="this.style.borderColor='#1D9E75';this.style.background='#f0faf5'"
+      onmouseout="if(!this.dataset.selected){this.style.borderColor='#ddd';this.style.background='white'}">
+      <span style="font-family:monospace;color:#aaa;margin-right:8px">${['A','B','C','D'][i]}.</span> ${o}
+    </button>`).join('');
+}
+
+function answerR(chosen){
+  if(RS.answered) return;
+  RS.answered = true;
+  const q = RS.questions[RS.current];
+  const correct = chosen === q.ans;
+
+  // 점수 기록: 정답=1, 오답=0
+  const qtype = q.type; // 'reading', 'vocabulary', 'grammar'
+  if(!RS.scores[qtype]) RS.scores[qtype] = [];
+  RS.scores[qtype].push(correct ? 1 : 0);
+  console.log(`[답변] 유형:${qtype} 정답:${correct} 현재점수:`, JSON.stringify(RS.scores));
+
+  const btns = document.getElementById('rOptions').querySelectorAll('button');
+  btns.forEach((btn,i)=>{
+    btn.disabled = true;
+    btn.dataset.selected = '1';
+    btn.onmouseover = null;
+    btn.onmouseout = null;
+    if(i===q.ans){
+      btn.style.borderColor='#1D9E75';
+      btn.style.background='#E1F5EE';
+      btn.style.color='#085041';
+    } else if(i===chosen && !correct){
+      btn.style.borderColor='#E24B4A';
+      btn.style.background='#FCEBEB';
+      btn.style.color='#791F1F';
+    }
+  });
+
+  const fb = document.getElementById('rFeedback');
+  fb.style.display='block';
+  fb.style.background = correct ? '#f0faf5' : '#fff8f8';
+  fb.style.borderColor = correct ? '#b8e8d4' : '#fca5a5';
+  fb.style.color = correct ? '#0F6E56' : '#791F1F';
+  fb.innerHTML = `${correct ? '✅ 정답입니다!' : '❌ 오답입니다.'} <br><span style="color:#555">${q.exp}</span>`;
+
+  document.getElementById('rNextBtn').style.display='flex';
+  document.getElementById('rNextBtn').textContent = RS.current < RS.questions.length-1 ? '다음 문제 →' : '결과 보기 →';
+}
+
+function nextRQuestion(){
+  RS.current++;
+  if(RS.current >= RS.questions.length){
+    showTotalResults();
+  } else {
+    showRQuestion();
+  }
+}
+
+function avg(arr){ return arr.length ? Math.round(arr.reduce((a,b)=>a+b,0)/arr.length * 100) : 0; }
+
+function scoreLabel(v){
+  if(v===100) return {text:'만점', color:'#1D9E75'};
+  if(v>=75)   return {text:'우수', color:'#185FA5'};
+  if(v>=50)   return {text:'보통', color:'#BA7517'};
+  return       {text:'개선 필요', color:'#A32D2D'};
+}
+
+function showTotalResults(){
+  document.getElementById('readingView').classList.add('hidden');
+  document.getElementById('totalView').classList.remove('hidden');
+  window.scrollTo({top:0, behavior:'smooth'});
+
+  // 정확한 점수 계산: 맞은 개수 / 전체 개수 × 100
+  const s = RS.scores;
+  console.log('[최종 점수 계산]', JSON.stringify(s));
+  const readScore  = avg(s.reading   || []);
+  const vocabScore = avg(s.vocabulary|| []);
+  const gramScore  = avg(s.grammar   || []);
+  console.log(`독해:${readScore} 어휘:${vocabScore} 문법:${gramScore}`);
+
+  // 스피킹: AR을 0~100으로 환산
+  const speakScore = Math.round(Math.min(100, RS.speakingAR / 12 * 100));
+
+  // 종합: 스피킹 40% + 독해 20% + 어휘 20% + 문법 20%
+  const total = Math.round(speakScore*0.4 + readScore*0.2 + vocabScore*0.2 + gramScore*0.2);
+
+  // 종합 점수 → AR / CEFR
+  const finalAR = parseFloat((total / 100 * 12).toFixed(1));
+  const cefrInfo = arToCefr(finalAR);
+
+  // AR + CEFR 히어로
+  document.getElementById('totalArHero').style.background = cefrInfo.bg;
+  document.getElementById('totalAR').style.color = cefrInfo.color;
+  document.getElementById('totalAR').textContent = finalAR.toFixed(1);
+  document.getElementById('totalCefrHero').style.background = cefrInfo.bg;
+  document.getElementById('totalCEFR').style.color = cefrInfo.color;
+  document.getElementById('totalCEFR').textContent = cefrInfo.cefr;
+  document.getElementById('totalCefrDesc').textContent = cefrInfo.desc;
+  document.getElementById('totalCefrDesc').style.color = cefrInfo.color;
+
+  // CEFR 단계 바
+  document.getElementById('totalLsteps').style.setProperty('--lc', cefrInfo.color);
+  for(let i=0;i<6;i++){
+    const el=document.getElementById('tls'+i);
+    const ne=document.getElementById('tln'+i);
+    el.style.setProperty('--lc',cefrInfo.color);
+    setTimeout(()=>{
+      el.classList.toggle('on',i<=cefrInfo.idx);
+      el.classList.toggle('cur',i===cefrInfo.idx);
+    },i*80);
+    ne.className='lname'+(i===cefrInfo.idx?' cur':'');
+    ne.style.color=i===cefrInfo.idx?cefrInfo.color:'';
+  }
+
+  // 영역별 점수 카드 (막대 + 숫자 + 라벨 + 피드백)
+  const areas = [
+    {id:'Speak', val:speakScore, label:'스피킹', icon:'🗣', desc:'발음·유창성·운율 (Azure AI)'},
+    {id:'Read',  val:readScore,  label:'독해',   icon:'📖', desc:'지문 이해 및 추론'},
+    {id:'Vocab', val:vocabScore, label:'어휘',   icon:'📝', desc:'어휘 범위 및 사용'},
+    {id:'Gram',  val:gramScore,  label:'문법',   icon:'🔤', desc:'문법 구조 및 정확성'},
+  ];
+  const barColors = ['#1D9E75','#185FA5','#534AB7','#BA7517'];
+
+  setTimeout(()=>{
+    areas.forEach((a,i)=>{
+      const sl = scoreLabel(a.val);
+      document.getElementById('tb'+a.id).style.width = a.val+'%';
+      const pEl = document.getElementById('tb'+a.id+'P');
+      pEl.innerHTML = `<span style="font-weight:700;color:${sl.color}">${a.val}%</span> <span style="font-size:10px;color:${sl.color};font-family:monospace">${sl.text}</span>`;
+    });
+  },200);
+
+  // 영역별 카드도 동적으로 교체 (더 풍부한 UI)
+  const scoreCardArea = document.getElementById('totalScoreCards');
+  if(scoreCardArea){
+    scoreCardArea.innerHTML = areas.map((a,i)=>`
+      <div style="background:#f8f8f6;border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:24px;flex-shrink:0">${a.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+            <span style="font-size:13px;font-weight:600;color:#111">${a.label}</span>
+            <span style="font-size:18px;font-weight:700;font-family:monospace;color:${scoreLabel(a.val).color}">${a.val}%</span>
+          </div>
+          <div style="height:6px;background:#eee;border-radius:3px;overflow:hidden;margin-bottom:4px">
+            <div style="height:100%;width:${a.val}%;background:${barColors[i]};border-radius:3px;transition:width 1s ease"></div>
+          </div>
+          <div style="font-size:11px;color:#aaa;display:flex;justify-content:space-between">
+            <span>${a.desc}</span>
+            <span style="color:${scoreLabel(a.val).color};font-weight:500">${scoreLabel(a.val).text}</span>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  renderCambridgeHours(cefrInfo, 'totalCambridgeHours');
+  renderDailyGuide(cefrInfo, 'totalDailyGuide');
+
+}
+
+// SDK 로드
+(function(){
+  const s=document.createElement('script');
+  s.src='https://aka.ms/csspeech/jsbrowserpackageraw';
+  s.onload=()=>{ ST.sdkLoaded=true; };
+  s.onerror=()=>showErr('Azure SDK 로드 실패. 인터넷 연결을 확인해주세요.');
+  document.head.appendChild(s);
+})();
+
+// 키 입력 후 시작
+function startWithKey(){
+  const key = document.getElementById('keyInput').value.trim();
+  const region = document.getElementById('regionInput').value;
+  const errEl = document.getElementById('keyErr');
+
+  if(!key){
+    errEl.style.display='block';
+    errEl.textContent='Azure Speech Services 키를 입력해주세요.';
+    return;
+  }
+  if(key.length < 20){
+    errEl.style.display='block';
+    errEl.textContent='올바른 키 형식이 아닙니다. Azure 포털에서 키를 다시 확인해주세요.';
+    return;
+  }
+
+  AZURE_KEY = key;
+  AZURE_REGION = region;
+
+  // 세션스토리지에 임시 저장 (새로고침 시 유지)
+  try {
+    sessionStorage.setItem('ao_key', key);
+    sessionStorage.setItem('ao_region', region);
+  } catch(e){}
+
+  errEl.style.display='none';
+  document.getElementById('keyView').classList.add('hidden');
+  document.getElementById('testView').classList.remove('hidden');
+  document.getElementById('changeKeyBtn').style.display='block';
+  init();
+}
+
+// 세션스토리지에 키가 있으면 자동 시작
+(function(){
+  try {
+    const savedKey = sessionStorage.getItem('ao_key');
+    const savedRegion = sessionStorage.getItem('ao_region');
+    if(savedKey && savedKey.length > 20){
+      AZURE_KEY = savedKey;
+      AZURE_REGION = savedRegion || 'koreacentral';
+      document.getElementById('keyView').classList.add('hidden');
+      document.getElementById('testView').classList.remove('hidden');
+      document.getElementById('changeKeyBtn').style.display='block';
+      init();
+    }
+  } catch(e){}
+})();
+</script>
+</body>
+</html>
